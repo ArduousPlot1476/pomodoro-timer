@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pomodoro Timer with Sprint Tracking</title>
+    <title>Pomodoro Timer</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -73,12 +77,6 @@
             padding: 2rem;
             background: #f9f9f9;
             border-radius: 8px;
-        }
-        .separator {
-            width: 100%;
-            height: 1px;
-            background: #ddd;
-            margin: 2rem 0;
         }
         .stats-summary {
             display: flex;
@@ -153,107 +151,107 @@
     </div>
 
     <script>
-        let timeLeft;
-        let timerId = null;
-        let startTime = null;
-        let originalDuration = null;
-        const display = document.getElementById('display');
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const timerMode = document.getElementById('timerMode');
-        const sprintTableBody = document.getElementById('sprintTableBody');
-        
-        // Stats elements
-        const totalSprintsElement = document.getElementById('totalSprints');
-        const avgCompletionElement = document.getElementById('avgCompletion');
-        const highestCompletionElement = document.getElementById('highestCompletion');
+        document.addEventListener('DOMContentLoaded', function() {
+            let timeLeft;
+            let timerId = null;
+            let startTime = null;
+            let originalDuration = null;
+            const display = document.getElementById('display');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const timerMode = document.getElementById('timerMode');
+            const sprintTableBody = document.getElementById('sprintTableBody');
+            
+            const totalSprintsElement = document.getElementById('totalSprints');
+            const avgCompletionElement = document.getElementById('avgCompletion');
+            const highestCompletionElement = document.getElementById('highestCompletion');
 
-        function updateStats() {
-            const rows = sprintTableBody.getElementsByTagName('tr');
-            const totalSprints = rows.length;
-            let totalCompletion = 0;
-            let highest = 0;
+            function updateStats() {
+                const rows = sprintTableBody.getElementsByTagName('tr');
+                const totalSprints = rows.length;
+                let totalCompletion = 0;
+                let highest = 0;
 
-            for (let row of rows) {
-                const completion = parseFloat(row.cells[3].textContent);
-                totalCompletion += completion;
-                highest = Math.max(highest, completion);
+                Array.from(rows).forEach(row => {
+                    const completion = parseFloat(row.cells[3].textContent);
+                    totalCompletion += completion;
+                    highest = Math.max(highest, completion);
+                });
+
+                totalSprintsElement.textContent = totalSprints;
+                avgCompletionElement.textContent = totalSprints > 0 
+                    ? `${(totalCompletion / totalSprints).toFixed(1)}%` 
+                    : '0%';
+                highestCompletionElement.textContent = `${highest.toFixed(1)}%`;
             }
 
-            totalSprintsElement.textContent = totalSprints;
-            avgCompletionElement.textContent = totalSprints > 0 
-                ? `${(totalCompletion / totalSprints).toFixed(1)}%` 
-                : '0%';
-            highestCompletionElement.textContent = `${highest.toFixed(1)}%`;
-        }
-
-        function updateDisplay(minutes, seconds) {
-            display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        function resetTimer() {
-            clearInterval(timerId);
-            timeLeft = parseInt(timerMode.value) * 60;
-            updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
-            startBtn.textContent = 'Start';
-            stopBtn.disabled = true;
-            timerId = null;
-            startTime = null;
-        }
-
-        function recordSprint(endTime) {
-            if (!startTime) return;
-            
-            const duration = (endTime - startTime) / 1000; // duration in seconds
-            const targetDuration = originalDuration;
-            const completionPercentage = (duration / targetDuration) * 100;
-            
-            // Only record if duration is more than 10% of target
-            if (completionPercentage >= 10) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${new Date(startTime).toLocaleTimeString()}</td>
-                    <td>${Math.floor(duration / 60)}m ${Math.round(duration % 60)}s</td>
-                    <td>${Math.floor(targetDuration / 60)}m</td>
-                    <td>${completionPercentage.toFixed(1)}%</td>
-                `;
-                sprintTableBody.insertBefore(row, sprintTableBody.firstChild);
-                updateStats();
+            function updateDisplay(minutes, seconds) {
+                display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
-        }
 
-        function stopTimer() {
-            if (timerId) {
+            function resetTimer() {
                 clearInterval(timerId);
-                recordSprint(new Date());
-                timerId = null;
+                timeLeft = parseInt(timerMode.value) * 60;
+                updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
                 startBtn.textContent = 'Start';
                 stopBtn.disabled = true;
-            }
-        }
-
-        startBtn.addEventListener('click', () => {
-            if (timerId) {
-                clearInterval(timerId);
                 timerId = null;
-                startBtn.textContent = 'Start';
-                stopBtn.disabled = true;
-            } else {
-                if (!startTime) {
-                    startTime = new Date();
-                    originalDuration = timeLeft;
+                startTime = null;
+            }
+
+            function recordSprint(endTime) {
+                if (!startTime) return;
+                
+                const duration = (endTime - startTime) / 1000;
+                const targetDuration = originalDuration;
+                const completionPercentage = (duration / targetDuration) * 100;
+                
+                if (completionPercentage >= 10) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(startTime).toLocaleTimeString()}</td>
+                        <td>${Math.floor(duration / 60)}m ${Math.round(duration % 60)}s</td>
+                        <td>${Math.floor(targetDuration / 60)}m</td>
+                        <td>${completionPercentage.toFixed(1)}%</td>
+                    `;
+                    sprintTableBody.insertBefore(row, sprintTableBody.firstChild);
+                    updateStats();
                 }
-                startBtn.textContent = 'Pause';
-                stopBtn.disabled = false;
-                timerId = setInterval(() => {
-                    timeLeft--;
-                    updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
-                    
-                    if (timeLeft <= 0) {
-                        clearInterval(timerId);
-                        recordSprint(new Date());
-                        timerId = null;
-                        startBtn.textContent = 'Start';
-                        stopBtn.disabled = true;
-                        new Audio('data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWgAI0wWs/ItAAAGDgYtAgAyN+QWaAAihwMWm4G8QQRDiMcCBcH3Cc+CDv/7xA4Tvh9Rz/y8QADBwMWgQAZG/ILNAARQ4GLTcDeIIIhxGOBAuD7hOfBB3/94gcJ3w+o5/5eIAIAAAVwWgQAVQ2ORaIQwEMAJiDg95G4nQL7mQVWI6GwRcfsZAcsKkJvxgxEjzFUgfHoSQ9Qq7KNwqHwuB13MA4a1q/DmBrHgPcmjiGoh//EwC5nGPEmS4RcfkVKOhJf+WOgoxJclFz3kgn//dBA+ya1GhurNn8zb//9NNutNuhz31f////9vt///z+IdAEAAAK4LQIAKobHItEIYCGAExBwe8jcToF9zIKrEdDYIuP2MgOWFSE34wYiR5iqQPj0JIeoVdlG4VD4XA67mAcNa1fhzA1jwHuTRxDUQ//iYBczjHiTJcIuPyKlHQkv/LHQUYkuSi57yQT//uggfZNajQ3Vmz+Zt//+mm3Wm3Q576v////+32///5/EOgAAADVghQAAAAA//uQZAUAB1WI0PZugAAAAAoQwAAAEk3nRd2qAAAAACiDgAAAAAAABCqEEQRLCgwpBGMlJkIz8jKhGvj4k6jzRnqasNKIeoh5gI7BJaC1A1AoNBjJgbyApVS4IDlZgDU5WUAxEKDNmmALHzZp0Fkz1FMTmGFl1FMEyodIavcCAUHDWrKAIA4aa2oCgILEBupZgHvAhEBcZ6joQBxS76AgccrFlczBvKLC0QI2cBoCFvfTDAo7eoOQInqDPBtvrDEZBNYN5xwNwxQRfw8ZQ5wQVLvO8OYU+mHvFLlDh05Mdg7BT6YrRPpCBznMB2r//xKJjyyOh+cImr2/4doscwD6neZjuZR4AgAABYAAAABy1xcdQtxYBYYZdifkUDgzzXaXn98Z0oi9ILU5mBjFANmRwlVJ3/6jYDAmxaiDG3/6xjQQCCKkRb/6kg/wW+kSJ5//rLobkLSiKmqP/0ikJuDaSaSf/6JiLYLEYnW/+kXg1WRVJL/9EmQ1YZIsv/6Qzwy5qk7/+tEU0nkls3/zIUMPKNX/6yZLf+kFgAfgGyLFAUwY//uQZAUABcd5UiNPVXAAAApAAAAAE0VZQKw9ISAAACgAAAAAVQIygIElVrFkBS+Jhi+EAuu+lKAkYUEIsmEAEoMeDmCETMvfSHTGkF5RWH7kz/ESHWPAq/kcCRhqBtMdokPdM7vil7RG98A2sc7zO6ZvTdM7pmOUAZTnJW+NXxqmd41dqJ6mLTXxrPpnV8avaIf5SvL7pndPvPpndJR9Kuu8fePvuiuhorgWjp7Mf/PRjxcFCPDkW31srioCExivv9lcwKEaHsf/7ow2Fl1T/9RkXgEhYElAoCLFtMArxwivDJJ+bR1HTKJdlEoTELCIqgEwVGSQ+hIm0NbK8WXcTEI0UPoa2NbG4y2K00JEWbZavJXkYaqo9CRHS55FcZTjKEk3NKoCYUnSQ0rWxrZbFKbKIhOKPZe1cJKzZSaQrIyULHDZmV5K4xySsDRKWOruanGtjLJXFEmwaIbDLX0hIPBUQPVFVkQkDoUNfSoDgQGKPekoxeGzA4DUvnn4bxzcZrtJyipKfPNy5w+9lnXwgqsiyHNeSVpemw4bWb9psYeq//uQZBoABQt4yMVxYAIAAAkQoAAAHvYpL5m6AAgAACXDAAAAD59jblTirQe9upFsmZbpMudy7Lz1X1DYsxOOSWpfPqNX2WqktK0DMvuGwlbNj44TleLPQ+Gsfb+GOWOKJoIrWb3cIMeeON6lz2umTqMXV8Mj30yWPpjoSa9ujK8SyeJP5y5mOW1D6hvLepeveEAEDo0mgCRClOEgANv3B9a6fikgUSu/DmAMATrGx7nng5p5iimPNZsfQLYB2sDLIkzRKZOHGAaUyD
+            }
+
+            function stopTimer() {
+                if (timerId) {
+                    clearInterval(timerId);
+                    recordSprint(new Date());
+                    timerId = null;
+                    startBtn.textContent = 'Start';
+                    stopBtn.disabled = true;
+                }
+            }
+
+            startBtn.addEventListener('click', () => {
+                if (timerId) {
+                    clearInterval(timerId);
+                    timerId = null;
+                    startBtn.textContent = 'Start';
+                    stopBtn.disabled = true;
+                } else {
+                    if (!startTime) {
+                        startTime = new Date();
+                        originalDuration = timeLeft;
+                    }
+                    startBtn.textContent = 'Pause';
+                    stopBtn.disabled = false;
+                    timerId = setInterval(() => {
+                        timeLeft--;
+                        updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
+                        
+                        if (timeLeft <= 0) {
+                            clearInterval(timerId);
+                            recordSprint(new Date());
+                            timerId = null;
+                            startBtn.textContent = 'Start';
+                            stopBtn.disabled = true;
+                            try {
+                                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+QmZBwTkFYhp6rqpppUVmNqL/Av3NFTIa1ydLRvGNFX5y/0dXLqGlwl77P0s23o4SGo87a2MWihYado8vd3MWrkZWepMjZ2Mesjo6ZocfX2Miulp2erMfR0cKxlZ6lpr/L0su+rKGjobrByMXCuayvrbS7v8G/vLu0s7Gxtru/xMfGvLKopKKyu8bP0cm+rqKblKGvv87U0L+yrKeantzS0NC7p7A52NXNyK+op6eXrcDO0s7EuKyimJ5lqMLQ2tfGrJyRhXyQpr/R2dbHtqqgl5KYo6+1trrBycvGv7u5uLW6vb7Cvbm1rqqrtsjQy7yrno+JmrXL1dHFtaid496ke4ydr8PUz7+tmoZzatiP1qBMo7rF0tXNt6GTh6O60dnYyLekkYmWp7O5xMzIvrKroJ+ktsTLxsC7s66strbEzMnAr6KenprE3dfQxrammpvG3NXPx7mro6aqoKCxvcLEwru2sba5vcG9tK6qp6Wrs8DCuaycmZykxNPb18ynmI2Lj5yyvs3OyLyvoJaGzpHR8PHNmnN2i6jC0NXUyLWjkIOy0Nbb2ce7p5OBg5mtxc/Mw7mvqrO+wsK+vLq1rqyuxM7Kv66gnpudo8bT0cyynpOSkZSxvcnHvrKhlISJqb/Q2NTEsZ2NgcXx6MSinJ6elaS7ydHZ2MKdioWVrsjW29fJs6COhpOov8nIxMC4r7S/w8G8s66ssLK0u8PGvrOrpaOos8HIwramnp2ft8nY2s2uk4yIjZ26y9HSxrermpCZwNzc1cWqkYeClq3H1NXT1dG5oYuEkKrC0tfUybWejGI7NWOQq7zIyMW3pZiO/PP1zZpaZH6YtcnU1s25p5mFc4yht8bX3NvLt6aRfneJn7PBzNLTyb2pjnx8kqjE0tfbzcCnoZCBhJu2ydLU1NHPxLWnmpWWn7G6wMTFxcO7sKiioae2u7y7urmxrKyyvMPLyL+yppWNjZezzNrYzrSdj4mDhp66y9fUxLCfl4+NudjY1MucgH2EmLbN1tfMt6KNgH6Xsc3a3tfFs5+JeJCpu8bX3NvRu6iRhIeWq7zEytDRxbamnpiboK69w8nLzszEt6uknp2ks7vCyMbAubGtr7W9xMvLw7iroZ2Vn7XM1djVyLGgkIGBi6G9ztbRv6qalIyRwObd1MWPhICIoL/S2dbEq5WEeYukvM3W2NLBrJqGeZGqwMvX29nNvaaSgYWZsL/M1NjWzsK0o5KKjZ+1v8bKzcnBt62knZujtL/Hysy/s6qoqrK8xMzOx7+yp5+Vl6zE0djYyLOfkIZ/kKnE0tfRuqOTioWPt9Xj4MibeXmFn73S29rMtZ2JeoearsfV29jMup+NfYefuMbU2trVx7ekk4iNn7TAytDW08zAtKeYkZOksb3GzczJw7mvpaCirLe/xsrLxbuwp6SqtsHM0s/Ju6qel46YsMzZ2NC2oZGDf4egvM3Y1sKoj4GXyOvn3MKSc3WBmrnO2NvRwKeRf32YsMvY3NbHtaKNf4egutPi5tzYxbGcjYeNn7bEztbW0Mi6p5eRkZ+wvsbP0MzHvrKnoaCksb3Dy83Kw7etqaevusTN0czEt6qhmZmftcna3NXBqZSDfI2oxdLY1LqdgoeZxOTg1L+XgHuEmLTN2t7ZybGchHmMpb7N1tjWzLyolIaHm7TEz9jY1s7EtaaXj5CguMPM0tTQyb2vpZ6epLK9xcrOzcW9sqq
