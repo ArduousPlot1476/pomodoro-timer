@@ -1,106 +1,122 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pomodoro Timer</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+    <title>Pomodoro Timer</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1rem;
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
             max-width: 600px;
             margin: 0 auto;
             background: white;
-        }
-        .timer {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin: 1rem 0;
             color: #2f3437;
         }
-        .controls {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
-        }
-        button {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 3px;
-            background: #2eaadc;
-            color: white;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        button:hover {
-            background: #2591ba;
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        button.stop {
-            background: #dc2e2e;
-        }
-        button.stop:hover {
-            background: #ba2525;
+        .timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
         }
         .mode-selector {
-            margin-bottom: 1rem;
+            width: 100%;
+            margin-bottom: 20px;
         }
         select {
-            padding: 0.5rem;
-            border-radius: 3px;
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
             border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .start {
+            background-color: #2eaadc;
+            color: white;
+        }
+        .start:hover:not(:disabled) {
+            background-color: #2591ba;
+        }
+        .stop {
+            background-color: #dc2e2e;
+            color: white;
+        }
+        .stop:hover:not(:disabled) {
+            background-color: #ba2525;
+        }
+        .reset {
+            background-color: #666;
+            color: white;
+        }
+        .reset:hover:not(:disabled) {
+            background-color: #555;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-box h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stat-box p {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .sprint-history {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .sprint-history h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
+            background: white;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 0.5rem;
+            padding: 10px;
             text-align: left;
+            border: 1px solid #ddd;
         }
         th {
             background: #f5f5f5;
-        }
-        .sprint-data {
-            margin-top: 6rem;
-            width: 100%;
-            padding: 2rem;
-            background: #f9f9f9;
-            border-radius: 8px;
-        }
-        .stats-summary {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2rem;
-            gap: 1rem;
-        }
-        .stat-box {
-            background: white;
-            padding: 1rem;
-            border-radius: 6px;
-            flex: 1;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .stat-box h4 {
-            margin: 0 0 0.5rem 0;
-            color: #666;
-        }
-        .stat-box p {
-            margin: 0;
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #2f3437;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -112,31 +128,29 @@
             <option value="15">Long Break (15min)</option>
         </select>
     </div>
-    <div class="timer" id="display">25:00</div>
-    <div class="controls">
-        <button id="startBtn">Start</button>
-        <button id="stopBtn" class="stop" disabled>Stop</button>
-        <button id="resetBtn">Reset</button>
+    <div class="timer-display" id="display">25:00</div>
+    <div class="button-group">
+        <button class="start" id="startBtn">Start</button>
+        <button class="stop" id="stopBtn" disabled>Stop</button>
+        <button class="reset" id="resetBtn">Reset</button>
     </div>
-
-    <div class="sprint-data">
-        <div class="stats-summary">
-            <div class="stat-box">
-                <h4>Total Sprints</h4>
-                <p id="totalSprints">0</p>
-            </div>
-            <div class="stat-box">
-                <h4>Average Completion</h4>
-                <p id="avgCompletion">0%</p>
-            </div>
-            <div class="stat-box">
-                <h4>Highest Completion</h4>
-                <p id="highestCompletion">0%</p>
-            </div>
+    <div class="stats">
+        <div class="stat-box">
+            <h3>Total Sprints</h3>
+            <p id="totalSprints">0</p>
         </div>
-
-        <h3>Sprint History</h3>
-        <table id="sprintTable">
+        <div class="stat-box">
+            <h3>Average Completion</h3>
+            <p id="avgCompletion">0%</p>
+        </div>
+        <div class="stat-box">
+            <h3>Highest Completion</h3>
+            <p id="highestCompletion">0%</p>
+        </div>
+    </div>
+    <div class="sprint-history">
+        <h2>Sprint History</h2>
+        <table>
             <thead>
                 <tr>
                     <th>Start Time</th>
@@ -145,113 +159,128 @@
                     <th>Completion %</th>
                 </tr>
             </thead>
-            <tbody id="sprintTableBody">
-            </tbody>
+            <tbody id="sprintTableBody"></tbody>
         </table>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let timeLeft;
-            let timerId = null;
-            let startTime = null;
-            let originalDuration = null;
-            const display = document.getElementById('display');
-            const startBtn = document.getElementById('startBtn');
-            const stopBtn = document.getElementById('stopBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            const timerMode = document.getElementById('timerMode');
-            const sprintTableBody = document.getElementById('sprintTableBody');
-            
-            const totalSprintsElement = document.getElementById('totalSprints');
-            const avgCompletionElement = document.getElementById('avgCompletion');
-            const highestCompletionElement = document.getElementById('highestCompletion');
+        let timeLeft;
+        let timerId = null;
+        let startTime = null;
+        let originalDuration = null;
 
-            function updateStats() {
-                const rows = sprintTableBody.getElementsByTagName('tr');
-                const totalSprints = rows.length;
-                let totalCompletion = 0;
-                let highest = 0;
+        const display = document.getElementById('display');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const timerMode = document.getElementById('timerMode');
+        const sprintTableBody = document.getElementById('sprintTableBody');
+        const totalSprintsElement = document.getElementById('totalSprints');
+        const avgCompletionElement = document.getElementById('avgCompletion');
+        const highestCompletionElement = document.getElementById('highestCompletion');
 
-                Array.from(rows).forEach(row => {
-                    const completion = parseFloat(row.cells[3].textContent);
-                    totalCompletion += completion;
-                    highest = Math.max(highest, completion);
-                });
+        function updateStats() {
+            const rows = sprintTableBody.getElementsByTagName('tr');
+            const totalSprints = rows.length;
+            let totalCompletion = 0;
+            let highest = 0;
 
-                totalSprintsElement.textContent = totalSprints;
-                avgCompletionElement.textContent = totalSprints > 0 
-                    ? `${(totalCompletion / totalSprints).toFixed(1)}%` 
-                    : '0%';
-                highestCompletionElement.textContent = `${highest.toFixed(1)}%`;
+            for (let i = 0; i < rows.length; i++) {
+                const completion = parseFloat(rows[i].cells[3].textContent);
+                totalCompletion += completion;
+                highest = Math.max(highest, completion);
             }
 
-            function updateDisplay(minutes, seconds) {
-                display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
+            totalSprintsElement.textContent = totalSprints;
+            avgCompletionElement.textContent = totalSprints > 0 
+                ? `${(totalCompletion / totalSprints).toFixed(1)}%` 
+                : '0%';
+            highestCompletionElement.textContent = `${highest.toFixed(1)}%`;
+        }
 
-            function resetTimer() {
+        function updateDisplay(minutes, seconds) {
+            display.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function resetTimer() {
+            if (timerId) {
                 clearInterval(timerId);
-                timeLeft = parseInt(timerMode.value) * 60;
-                updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
+            }
+            timeLeft = parseInt(timerMode.value) * 60;
+            updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
+            startBtn.textContent = 'Start';
+            stopBtn.disabled = true;
+            timerId = null;
+            startTime = null;
+        }
+
+        function recordSprint(endTime) {
+            if (!startTime) return;
+            
+            const duration = (endTime - startTime) / 1000;
+            const targetDuration = originalDuration;
+            const completionPercentage = (duration / targetDuration) * 100;
+            
+            if (completionPercentage >= 10) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(startTime).toLocaleTimeString()}</td>
+                    <td>${Math.floor(duration / 60)}m ${Math.round(duration % 60)}s</td>
+                    <td>${Math.floor(targetDuration / 60)}m</td>
+                    <td>${completionPercentage.toFixed(1)}%</td>
+                `;
+                sprintTableBody.insertBefore(row, sprintTableBody.firstChild);
+                updateStats();
+            }
+        }
+
+        timerMode.addEventListener('change', resetTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        stopBtn.addEventListener('click', () => {
+            if (timerId) {
+                clearInterval(timerId);
+                recordSprint(new Date());
+                timerId = null;
                 startBtn.textContent = 'Start';
                 stopBtn.disabled = true;
+            }
+        });
+
+        startBtn.addEventListener('click', () => {
+            if (timerId) {
+                clearInterval(timerId);
                 timerId = null;
-                startTime = null;
-            }
-
-            function recordSprint(endTime) {
-                if (!startTime) return;
-                
-                const duration = (endTime - startTime) / 1000;
-                const targetDuration = originalDuration;
-                const completionPercentage = (duration / targetDuration) * 100;
-                
-                if (completionPercentage >= 10) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${new Date(startTime).toLocaleTimeString()}</td>
-                        <td>${Math.floor(duration / 60)}m ${Math.round(duration % 60)}s</td>
-                        <td>${Math.floor(targetDuration / 60)}m</td>
-                        <td>${completionPercentage.toFixed(1)}%</td>
-                    `;
-                    sprintTableBody.insertBefore(row, sprintTableBody.firstChild);
-                    updateStats();
+                startBtn.textContent = 'Start';
+                stopBtn.disabled = true;
+            } else {
+                if (!startTime) {
+                    startTime = new Date();
+                    originalDuration = timeLeft;
                 }
-            }
-
-            function stopTimer() {
-                if (timerId) {
-                    clearInterval(timerId);
-                    recordSprint(new Date());
-                    timerId = null;
-                    startBtn.textContent = 'Start';
-                    stopBtn.disabled = true;
-                }
-            }
-
-            startBtn.addEventListener('click', () => {
-                if (timerId) {
-                    clearInterval(timerId);
-                    timerId = null;
-                    startBtn.textContent = 'Start';
-                    stopBtn.disabled = true;
-                } else {
-                    if (!startTime) {
-                        startTime = new Date();
-                        originalDuration = timeLeft;
+                startBtn.textContent = 'Pause';
+                stopBtn.disabled = false;
+                timerId = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerId);
+                        recordSprint(new Date());
+                        timerId = null;
+                        startBtn.textContent = 'Start';
+                        stopBtn.disabled = true;
+                        try {
+                            new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA').play();
+                        } catch (e) {
+                            console.log('Audio not supported');
+                        }
                     }
-                    startBtn.textContent = 'Pause';
-                    stopBtn.disabled = false;
-                    timerId = setInterval(() => {
-                        timeLeft--;
-                        updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
-                        
-                        if (timeLeft <= 0) {
-                            clearInterval(timerId);
-                            recordSprint(new Date());
-                            timerId = null;
-                            startBtn.textContent = 'Start';
-                            stopBtn.disabled = true;
-                            try {
-                                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+QmZBwTkFYhp6rqpppUVmNqL/Av3NFTIa1ydLRvGNFX5y/0dXLqGlwl77P0s23o4SGo87a2MWihYado8vd3MWrkZWepMjZ2Mesjo6ZocfX2Miulp2erMfR0cKxlZ6lpr/L0su+rKGjobrByMXCuayvrbS7v8G/vLu0s7Gxtru/xMfGvLKopKKyu8bP0cm+rqKblKGvv87U0L+yrKeantzS0NC7p7A52NXNyK+op6eXrcDO0s7EuKyimJ5lqMLQ2tfGrJyRhXyQpr/R2dbHtqqgl5KYo6+1trrBycvGv7u5uLW6vb7Cvbm1rqqrtsjQy7yrno+JmrXL1dHFtaid496ke4ydr8PUz7+tmoZzatiP1qBMo7rF0tXNt6GTh6O60dnYyLekkYmWp7O5xMzIvrKroJ+ktsTLxsC7s66strbEzMnAr6KenprE3dfQxrammpvG3NXPx7mro6aqoKCxvcLEwru2sba5vcG9tK6qp6Wrs8DCuaycmZykxNPb18ynmI2Lj5yyvs3OyLyvoJaGzpHR8PHNmnN2i6jC0NXUyLWjkIOy0Nbb2ce7p5OBg5mtxc/Mw7mvqrO+wsK+vLq1rqyuxM7Kv66gnpudo8bT0cyynpOSkZSxvcnHvrKhlISJqb/Q2NTEsZ2NgcXx6MSinJ6elaS7ydHZ2MKdioWVrsjW29fJs6COhpOov8nIxMC4r7S/w8G8s66ssLK0u8PGvrOrpaOos8HIwramnp2ft8nY2s2uk4yIjZ26y9HSxrermpCZwNzc1cWqkYeClq3H1NXT1dG5oYuEkKrC0tfUybWejGI7NWOQq7zIyMW3pZiO/PP1zZpaZH6YtcnU1s25p5mFc4yht8bX3NvLt6aRfneJn7PBzNLTyb2pjnx8kqjE0tfbzcCnoZCBhJu2ydLU1NHPxLWnmpWWn7G6wMTFxcO7sKiioae2u7y7urmxrKyyvMPLyL+yppWNjZezzNrYzrSdj4mDhp66y9fUxLCfl4+NudjY1MucgH2EmLbN1tfMt6KNgH6Xsc3a3tfFs5+JeJCpu8bX3NvRu6iRhIeWq7zEytDRxbamnpiboK69w8nLzszEt6uknp2ks7vCyMbAubGtr7W9xMvLw7iroZ2Vn7XM1djVyLGgkIGBi6G9ztbRv6qalIyRwObd1MWPhICIoL/S2dbEq5WEeYukvM3W2NLBrJqGeZGqwMvX29nNvaaSgYWZsL/M1NjWzsK0o5KKjZ+1v8bKzcnBt62knZujtL/Hysy/s6qoqrK8xMzOx7+yp5+Vl6zE0djYyLOfkIZ/kKnE0tfRuqOTioWPt9Xj4MibeXmFn73S29rMtZ2JeoearsfV29jMup+NfYefuMbU2trVx7ekk4iNn7TAytDW08zAtKeYkZOksb3GzczJw7mvpaCirLe/xsrLxbuwp6SqtsHM0s/Ju6qel46YsMzZ2NC2oZGDf4egvM3Y1sKoj4GXyOvn3MKSc3WBmrnO2NvRwKeRf32YsMvY3NbHtaKNf4egutPi5tzYxbGcjYeNn7bEztbW0Mi6p5eRkZ+wvsbP0MzHvrKnoaCksb3Dy83Kw7etqaevusTN0czEt6qhmZmftcna3NXBqZSDfI2oxdLY1LqdgoeZxOTg1L+XgHuEmLTN2t7ZybGchHmMpb7N1tjWzLyolIaHm7TEz9jY1s7EtaaXj5CguMPM0tTQyb2vpZ6epLK9xcrOzcW9sqq
+                }, 1000);
+            }
+        });
+
+        resetTimer();
+    </script>
+</body>
+</html>
