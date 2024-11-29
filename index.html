@@ -1,97 +1,286 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-const FocusTimer = () => {
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  const [mode, setMode] = useState('25');
-  const [stats, setStats] = useState({ total: 0, avg: 0, highest: 0 });
-  const [history, setHistory] = useState([]);
-
-  useEffect(() => {
-    let timer;
-    if (isRunning && timeLeft > 0) {
-      timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [isRunning]);
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-
-  const toggleTimer = () => setIsRunning(!isRunning);
-  
-  const resetTimer = () => {
-    setIsRunning(false);
-    setTimeLeft(parseInt(mode) * 60);
-  };
-
-  return (
-    <div className="max-w-md mx-auto p-6">
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-center text-xl font-medium">Focus Timer</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <select 
-            value={mode}
-            onChange={(e) => {
-              setMode(e.target.value);
-              setTimeLeft(parseInt(e.target.value) * 60);
-              setIsRunning(false);
-            }}
-            className="w-full mb-4 p-2 rounded border border-gray-200"
-          >
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            color: #2f3437;
+        }
+        .timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .mode-selector {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .start {
+            background-color: #2eaadc;
+            color: white;
+        }
+        .start:hover:not(:disabled) {
+            background-color: #2591ba;
+        }
+        .stop {
+            background-color: #dc2e2e;
+            color: white;
+        }
+        .stop:hover:not(:disabled) {
+            background-color: #ba2525;
+        }
+        .reset {
+            background-color: #666;
+            color: white;
+        }
+        .reset:hover:not(:disabled) {
+            background-color: #555;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-box h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stat-box p {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .sprint-history {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .sprint-history h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="mode-selector">
+        <select id="timerMode">
             <option value="25">Pomodoro (25min)</option>
             <option value="5">Short Break (5min)</option>
             <option value="15">Long Break (15min)</option>
-          </select>
-          
-          <div className="text-6xl font-bold text-center mb-6">
-            {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-          </div>
-
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={toggleTimer}
-              className={`p-3 rounded-full ${isRunning ? 'bg-red-500' : 'bg-blue-500'} text-white hover:opacity-90 transition-opacity`}
-            >
-              {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-            </button>
-            <button
-              onClick={resetTimer}
-              className="p-3 rounded-full bg-gray-500 text-white hover:opacity-90 transition-opacity"
-            >
-              <RotateCcw className="w-6 h-6" />
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-sm text-gray-500">Total</div>
-              <div className="text-2xl font-semibold">{stats.total}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-gray-500">Average</div>
-              <div className="text-2xl font-semibold">{stats.avg}%</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-gray-500">Highest</div>
-              <div className="text-2xl font-semibold">{stats.highest}%</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </select>
     </div>
-  );
-};
+    <div class="timer-display" id="display">25:00</div>
+    <div class="button-group">
+        <button class="start" id="startBtn">Start</button>
+        <button class="stop" id="stopBtn" disabled>Stop</button>
+        <button class="reset" id="resetBtn">Reset</button>
+    </div>
+    <div class="stats">
+        <div class="stat-box">
+            <h3>Total Sprints</h3>
+            <p id="totalSprints">0</p>
+        </div>
+        <div class="stat-box">
+            <h3>Average Completion</h3>
+            <p id="avgCompletion">0%</p>
+        </div>
+        <div class="stat-box">
+            <h3>Highest Completion</h3>
+            <p id="highestCompletion">0%</p>
+        </div>
+    </div>
+    <div class="sprint-history">
+        <h2>Sprint History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Start Time</th>
+                    <th>Duration</th>
+                    <th>Target Duration</th>
+                    <th>Completion %</th>
+                </tr>
+            </thead>
+            <tbody id="sprintTableBody"></tbody>
+        </table>
+    </div>
 
-export default FocusTimer;
+    <script>
+        let timeLeft;
+        let timerId = null;
+        let startTime = null;
+        let originalDuration = null;
+
+        const display = document.getElementById('display');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const timerMode = document.getElementById('timerMode');
+        const sprintTableBody = document.getElementById('sprintTableBody');
+        const totalSprintsElement = document.getElementById('totalSprints');
+        const avgCompletionElement = document.getElementById('avgCompletion');
+        const highestCompletionElement = document.getElementById('highestCompletion');
+
+        function updateStats() {
+            const rows = sprintTableBody.getElementsByTagName('tr');
+            const totalSprints = rows.length;
+            let totalCompletion = 0;
+            let highest = 0;
+
+            for (let i = 0; i < rows.length; i++) {
+                const completion = parseFloat(rows[i].cells[3].textContent);
+                totalCompletion += completion;
+                highest = Math.max(highest, completion);
+            }
+
+            totalSprintsElement.textContent = totalSprints;
+            avgCompletionElement.textContent = totalSprints > 0 
+                ? `${(totalCompletion / totalSprints).toFixed(1)}%` 
+                : '0%';
+            highestCompletionElement.textContent = `${highest.toFixed(1)}%`;
+        }
+
+        function updateDisplay(minutes, seconds) {
+            display.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function resetTimer() {
+            if (timerId) {
+                clearInterval(timerId);
+            }
+            timeLeft = parseInt(timerMode.value) * 60;
+            updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
+            startBtn.textContent = 'Start';
+            stopBtn.disabled = true;
+            timerId = null;
+            startTime = null;
+        }
+
+        function recordSprint(endTime) {
+            if (!startTime) return;
+            
+            const duration = (endTime - startTime) / 1000;
+            const targetDuration = originalDuration;
+            const completionPercentage = (duration / targetDuration) * 100;
+            
+            if (completionPercentage >= 10) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(startTime).toLocaleTimeString()}</td>
+                    <td>${Math.floor(duration / 60)}m ${Math.round(duration % 60)}s</td>
+                    <td>${Math.floor(targetDuration / 60)}m</td>
+                    <td>${completionPercentage.toFixed(1)}%</td>
+                `;
+                sprintTableBody.insertBefore(row, sprintTableBody.firstChild);
+                updateStats();
+            }
+        }
+
+        timerMode.addEventListener('change', resetTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        stopBtn.addEventListener('click', () => {
+            if (timerId) {
+                clearInterval(timerId);
+                recordSprint(new Date());
+                timerId = null;
+                startBtn.textContent = 'Start';
+                stopBtn.disabled = true;
+            }
+        });
+
+        startBtn.addEventListener('click', () => {
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+                startBtn.textContent = 'Start';
+                stopBtn.disabled = true;
+            } else {
+                if (!startTime) {
+                    startTime = new Date();
+                    originalDuration = timeLeft;
+                }
+                startBtn.textContent = 'Pause';
+                stopBtn.disabled = false;
+                timerId = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerId);
+                        recordSprint(new Date());
+                        timerId = null;
+                        startBtn.textContent = 'Start';
+                        stopBtn.disabled = true;
+                        try {
+                            new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgA').play();
+                        } catch (e) {
+                            console.log('Audio not supported');
+                        }
+                    }
+                }, 1000);
+            }
+        });
+
+        resetTimer();
+    </script>
+</body>
+</html>
